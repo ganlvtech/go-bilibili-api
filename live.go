@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -36,7 +35,9 @@ type RoomInitResponse struct {
 //
 // GET https://api.live.bilibili.com/room/v1/Room/room_init?id=3
 func RoomInit(shortId int) (*RoomInitResponse, error) {
-	resp, err := http.Get(fmt.Sprintf("https://api.live.bilibili.com/room/v1/Room/room_init?id=%d", shortId))
+	v := url.Values{}
+	v.Set("id", strconv.Itoa(shortId))
+	resp, err := http.Get("https://api.live.bilibili.com/room/v1/Room/room_init?" + v.Encode())
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +110,9 @@ type RoomInfoResponse struct {
 //
 // GET https://api.live.bilibili.com/room/v1/Room/get_info?room_id=3
 func RoomInfo(shortId int) (*RoomInfoResponse, error) {
-	resp, err := http.Get(fmt.Sprintf("https://api.live.bilibili.com/room/v1/Room/get_info?room_id=%d", shortId))
+	v := url.Values{}
+	v.Set("room_id", strconv.Itoa(shortId))
+	resp, err := http.Get("https://api.live.bilibili.com/room/v1/Room/get_info?" + v.Encode())
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +268,9 @@ type DanmakuConfigResponse struct {
 //
 // GET https://api.live.bilibili.com/userext/v1/danmuConf/getAll?roomid=3
 func (b *BilibiliApiClient) GetDanmakuConfig(roomId int) (*DanmakuConfigResponse, error) {
-	resp, err := b.Client.Get("https://api.live.bilibili.com/userext/v1/danmuConf/getAll?roomid=" + strconv.Itoa(roomId))
+	v := url.Values{}
+	v.Set("roomid", strconv.Itoa(roomId))
+	resp, err := http.Get("https://api.live.bilibili.com/userext/v1/danmuConf/getAll?" + v.Encode())
 	if err != nil {
 		return nil, err
 	}
@@ -629,6 +634,134 @@ func (s *SilverBoxTask) FreeSilverAward() (*SilverBoxFreeSilverAwardResponse, er
 		return nil, err
 	}
 	response := &SilverBoxFreeSilverAwardResponse{Code: -1}
+	j := json.NewDecoder(resp.Body)
+	err = j.Decode(response)
+	if err != nil {
+		return response, &ResponseJsonDecodeError{response.Message, err}
+	}
+	if response.Code != 0 {
+		return response, &ResponseCodeNotZero{response.Message}
+	}
+	return response, nil
+}
+
+// TODO
+type DailySignResponse struct {
+	Code    int         `json:"code"`
+	Msg     string      `json:"msg"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"` // TODO
+}
+
+// 每日签到
+//
+// 用户中心 > 任务成就 > 每日任务 > 每日签到
+//
+// 签到规则：
+//
+// 1. 每日签到都会获得两个辣条、3000 用户经验值（年费老爷翻倍）、600友爱金
+//
+// 2. 累计签到 5、10、20、自然月全勤可以获得额外奖励：
+//
+// 累计签 5 天：666 银瓜子
+//
+// 累计签 10 天：3 天月费老爷体验
+//
+// 累计签 20 天：50 个辣条（将存入您的道具包裹，7 个自然日后失效）
+//
+// 自然月全勤：月老头衔 1 个月的佩戴权限
+func (b *BilibiliApiClient) DailySign(getUrl string) (*DailySignResponse, error) {
+	resp, err := b.Client.Get(getUrl)
+	if err != nil {
+		return nil, err
+	}
+	response := &DailySignResponse{Code: -1}
+	j := json.NewDecoder(resp.Body)
+	err = j.Decode(response)
+	if err != nil {
+		return response, &ResponseJsonDecodeError{response.Message, err}
+	}
+	if response.Code != 0 {
+		return response, &ResponseCodeNotZero{response.Message}
+	}
+	return response, nil
+}
+
+// 每日签到（网页端）
+//
+// GET https://api.live.bilibili.com/sign/doSign
+func (b *BilibiliApiClient) DailySignWeb() (*DailySignResponse, error) {
+	return b.DailySign("https://api.live.bilibili.com/sign/doSign")
+}
+
+// 每日签到（移动端）
+//
+// GET https://api.live.bilibili.com/appUser/getSignInfo
+func (b *BilibiliApiClient) DailySignApp() (*DailySignResponse, error) {
+	return b.DailySign("https://api.live.bilibili.com/appUser/getSignInfo")
+}
+
+type GetSignInfoResponse struct {
+	Code    int    `json:"code"`
+	Msg     string `json:"msg"`
+	Message string `json:"message"`
+	Data    struct {
+		Text              string `json:"text"`
+		SpecialText       string `json:"specialText"`
+		Status            int    `json:"status"`
+		AllDays           int    `json:"allDays"`
+		CurMonth          int    `json:"curMonth"`
+		CurYear           int    `json:"curYear"`
+		CurDay            int    `json:"curDay"`
+		CurDate           string `json:"curDate"`
+		HadSignDays       int    `json:"hadSignDays"`
+		NewTask           int    `json:"newTask"`
+		SignDaysList      []int  `json:"signDaysList"`
+		SignBonusDaysList []int  `json:"signBonusDaysList"`
+	} `json:"data"`
+}
+
+// 每日签到信息
+//
+// GET https://api.live.bilibili.com/sign/GetSignInfo
+func (b *BilibiliApiClient) GetSignInfoWeb() (*GetSignInfoResponse, error) {
+	resp, err := b.Client.Get("https://api.live.bilibili.com/sign/GetSignInfo")
+	if err != nil {
+		return nil, err
+	}
+	response := &GetSignInfoResponse{Code: -1}
+	j := json.NewDecoder(resp.Body)
+	err = j.Decode(response)
+	if err != nil {
+		return response, &ResponseJsonDecodeError{response.Message, err}
+	}
+	if response.Code != 0 {
+		return response, &ResponseCodeNotZero{response.Message}
+	}
+	return response, nil
+}
+
+// TODO
+type ReceiveAwardResponse struct {
+	Code    int         `json:"code"`
+	Msg     string      `json:"msg"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"` // TODO
+}
+
+// 领取奖励
+//
+// 双端观看任务 double_watch_task
+//
+// GET or POST https://api.live.bilibili.com/activity/v1/task/receive_award?task_id=double_watch_task
+func (b *BilibiliApiClient) ReceiveAward(taskId string) (*ReceiveAwardResponse, error) {
+	v := url.Values{}
+	v.Set("task_id", taskId)
+	resp, err := b.Client.Get("https://api.live.bilibili.com/activity/v1/task/receive_award?" + v.Encode())
+	if err != nil {
+		return nil, err
+	}
+	response := &ReceiveAwardResponse{Code: -1}
 	j := json.NewDecoder(resp.Body)
 	err = j.Decode(response)
 	if err != nil {

@@ -191,3 +191,41 @@ func ExampleSilverBoxTask_FreeSilverAward() {
 		}
 	}
 }
+
+func ExampleBilibiliApiClient_DailySignWeb() {
+	b := BilibiliApiClient()
+	_, err := b.DailySignWeb()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+func ExampleBilibiliApiClient_DailySignApp() {
+	b := BilibiliApiClient()
+	_, err := b.DailySignApp()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+func ExampleBilibiliApiClient_GetSignInfoWeb() {
+	b := BilibiliApiClient()
+	signInfoResponse, err := b.GetSignInfoWeb()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println(signInfoResponse)
+}
+
+
+func ExampleBilibiliApiClient_ReceiveAward() {
+	b := BilibiliApiClient()
+	_, err := b.ReceiveAward("double_watch_task")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}

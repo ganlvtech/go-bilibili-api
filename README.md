@@ -11,6 +11,22 @@ Methods may be changed at any time!
 
 ## Components
 
+GetBagList
+BagSend
+GetDanmakuConfig
+SendLiveMessage
+ReceiveDailyBag
+SilverToCoinWeb
+SilverToCoinApp
+GetTaskInfo
+UserOnlineHeartbeatWeb
+UserOnlineHeartbeatMobile
+FreeSilverAward
+DailySignWeb
+DailySignApp
+GetSignInfoWeb
+ReceiveAward
+
 | File                  | Description                |
 |-----------------------|----------------------------|
 | auth                  | 帐号登录组件               |
