@@ -128,6 +128,130 @@ func RoomInfo(shortId int) (*RoomInfoResponse, error) {
 	return response, nil
 }
 
+type GiftConfigResponse struct {
+	Code    int    `json:"code"`
+	Msg     string `json:"msg"`
+	Message string `json:"message"`
+	Data    []struct {
+		ID                int    `json:"id"`
+		Name              string `json:"name"`
+		Price             int    `json:"price"`
+		Type              int    `json:"type"`
+		CoinType          string `json:"coin_type"`
+		BagGift           int    `json:"bag_gift"`
+		Effect            int    `json:"effect"`
+		CornerMark        string `json:"corner_mark"`
+		CornerBackground  string `json:"corner_background"`
+		Broadcast         int    `json:"broadcast"`
+		Draw              int    `json:"draw"`
+		StayTime          int    `json:"stay_time"`
+		AnimationFrameNum int    `json:"animation_frame_num"`
+		Desc              string `json:"desc"`
+		Rule              string `json:"rule"`
+		Rights            string `json:"rights"`
+		PrivilegeRequired int    `json:"privilege_required"`
+		CountMap          []struct {
+			Num  int    `json:"num"`
+			Text string `json:"text"`
+		} `json:"count_map"`
+		ImgBasic             string `json:"img_basic"`
+		ImgDynamic           string `json:"img_dynamic"`
+		FrameAnimation       string `json:"frame_animation"`
+		Gif                  string `json:"gif"`
+		Webp                 string `json:"webp"`
+		FullScWeb            string `json:"full_sc_web"`
+		FullScHorizontal     string `json:"full_sc_horizontal"`
+		FullScVertical       string `json:"full_sc_vertical"`
+		FullScHorizontalSvga string `json:"full_sc_horizontal_svga"`
+		FullScVerticalSvga   string `json:"full_sc_vertical_svga"`
+		BulletHead           string `json:"bullet_head"`
+		BulletTail           string `json:"bullet_tail"`
+		LimitInterval        int    `json:"limit_interval"`
+		GiftType             int    `json:"gift_type"`
+	} `json:"data"`
+}
+
+// 获取所有礼物信息
+//
+// GET https://api.live.bilibili.com/gift/v3/live/gift_config
+func GiftConfig() (*GiftConfigResponse, error) {
+	resp, err := http.Get("https://api.live.bilibili.com/gift/v3/live/gift_config")
+	if err != nil {
+		return nil, err
+	}
+	response := &GiftConfigResponse{Code: -1}
+	j := json.NewDecoder(resp.Body)
+	err = j.Decode(response)
+	if err != nil {
+		return response, &ResponseJsonDecodeError{response.Message, err}
+	}
+	if response.Code != 0 {
+		return response, &ResponseCodeNotZero{response.Message}
+	}
+	return response, nil
+}
+
+type RoomGiftListResponse struct {
+	Code    int    `json:"code"`
+	Msg     string `json:"msg"`
+	Message string `json:"message"`
+	Data    struct {
+		List []struct {
+			ID       int `json:"id"`
+			Position int `json:"position"`
+			PlanID   int `json:"plan_id"`
+		} `json:"list"`
+		SilverList []struct {
+			ID       int `json:"id"`
+			Position int `json:"position"`
+			PlanID   int `json:"plan_id"`
+		} `json:"silver_list"`
+		ShowCountMap int `json:"show_count_map"`
+		OldList      []struct {
+			ID       int    `json:"id"`
+			Name     string `json:"name"`
+			Price    int    `json:"price"`
+			Type     int    `json:"type"`
+			CoinType struct {
+				Silver string `json:"silver"`
+			} `json:"coin_type"`
+			Img      string `json:"img"`
+			GiftURL  string `json:"gift_url"`
+			CountSet string `json:"count_set"`
+			ComboNum int    `json:"combo_num"`
+			SuperNum int    `json:"super_num"`
+			CountMap struct {
+				Num1   string `json:"1"`
+				Num10  string `json:"10"`
+				Num99  string `json:"99"`
+				Num520 string `json:"520"`
+			} `json:"count_map"`
+		} `json:"old_list"`
+	} `json:"data"`
+}
+
+// 获取当前房间礼物信息
+//
+// GET https://api.live.bilibili.com/gift/v3/live/room_gift_list?roomid=23058
+func RoomGiftList(roomId int) (*RoomGiftListResponse, error) {
+	v := url.Values{}
+	v.Set("roomid", strconv.Itoa(roomId))
+	resp, err := http.Get("https://api.live.bilibili.com/gift/v3/live/room_gift_list?" + v.Encode())
+	if err != nil {
+		return nil, err
+	}
+	response := &RoomGiftListResponse{Code: -1}
+	j := json.NewDecoder(resp.Body)
+	err = j.Decode(response)
+	if err != nil {
+		return response, &ResponseJsonDecodeError{response.Message, err}
+	}
+	if response.Code != 0 {
+		return response, &ResponseCodeNotZero{response.Message}
+	}
+	return response, nil
+}
+
 type BagListResponse struct {
 	Code    int    `json:"code"`
 	Msg     string `json:"msg"`
@@ -228,7 +352,11 @@ type BagSendResponse struct {
 
 // 送免费礼物
 //
-// POST https://api.live.bilibili.com/gift/v2/live/bag_send
+// 如果 bagId = 0 则会使用瓜子送非免费的礼物
+//
+// 辣条的 giftId 为 1
+//
+// GET or POST https://api.live.bilibili.com/gift/v2/live/bag_send
 func (b *BilibiliApiClient) BagSend(roomId int, receiverUid int, bagId int, giftId int, giftNum int) (*BagSendResponse, error) {
 	v := url.Values{}
 	v.Set("gift_id", strconv.Itoa(giftId))
@@ -645,12 +773,27 @@ func (s *SilverBoxTask) FreeSilverAward() (*SilverBoxFreeSilverAwardResponse, er
 	return response, nil
 }
 
-// TODO
 type DailySignResponse struct {
-	Code    int         `json:"code"`
-	Msg     string      `json:"msg"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"` // TODO
+	Code    int    `json:"code"`
+	Msg     string `json:"msg"`
+	Message string `json:"message"`
+	Data    struct {
+		SignMsg   string `json:"sign_msg"`
+		MaxdayNum int    `json:"maxday_num"`
+		SignDay   int    `json:"sign_day"`
+		DaysAward []struct {
+			ID    int    `json:"id"`
+			Award string `json:"award"`
+			Count int    `json:"count"`
+			Day   int    `json:"day"`
+			Text  string `json:"text"`
+			Img   struct {
+				Src    string `json:"src"`
+				Width  int    `json:"width"`
+				Height int    `json:"height"`
+			} `json:"img"`
+		} `json:"days_award"`
+	} `json:"data"`
 }
 
 // 每日签到
@@ -741,7 +884,6 @@ func (b *BilibiliApiClient) GetSignInfoWeb() (*GetSignInfoResponse, error) {
 	return response, nil
 }
 
-// TODO
 type ReceiveAwardResponse struct {
 	Code    int         `json:"code"`
 	Msg     string      `json:"msg"`

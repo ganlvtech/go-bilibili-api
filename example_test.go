@@ -60,6 +60,46 @@ func BilibiliApiClient() *api.BilibiliApiClient {
 	return b
 }
 
+func ExampleGiftConfig() {
+	giftConfigResponse, err := api.GiftConfig()
+	if err != nil {
+		log.Println(err)
+	} else {
+		for _, v := range giftConfigResponse.Data {
+			draw := "不可抽奖"
+			if v.Draw > 0 {
+				draw = "可触发抽奖"
+			}
+			log.Println(v.Name, "id:", v.ID, "price:", v.Price, v.CoinType, v.Desc, v.Rights, draw)
+		}
+	}
+}
+
+func ExampleRoomGiftList() {
+	giftConfigResponse, err := api.GiftConfig()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	giftConfigMap := make(map[int]int)
+	for k, v := range giftConfigResponse.Data {
+		giftConfigMap[v.ID] = k
+	}
+	roomGiftListResponse, err := api.RoomGiftList(23058)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	for _, v := range roomGiftListResponse.Data.List {
+		v2 := giftConfigResponse.Data[giftConfigMap[v.ID]]
+		draw := "不可抽奖"
+		if v2.Draw > 0 {
+			draw = "可触发抽奖"
+		}
+		log.Println(v2.Name, "id:", v2.ID, "price:", v2.Price, v2.CoinType, v2.Desc, v2.Rights, draw)
+	}
+}
+
 func ExampleBilibiliApiClient_GetBagList() {
 	b := BilibiliApiClient()
 	bagListResponse, err := b.GetBagList()
@@ -219,7 +259,6 @@ func ExampleBilibiliApiClient_GetSignInfoWeb() {
 	}
 	log.Println(signInfoResponse)
 }
-
 
 func ExampleBilibiliApiClient_ReceiveAward() {
 	b := BilibiliApiClient()

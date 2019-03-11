@@ -11,21 +11,23 @@ Methods may be changed at any time!
 
 ## Components
 
-GetBagList
-BagSend
-GetDanmakuConfig
-SendLiveMessage
-ReceiveDailyBag
-SilverToCoinWeb
-SilverToCoinApp
-GetTaskInfo
-UserOnlineHeartbeatWeb
-UserOnlineHeartbeatMobile
-FreeSilverAward
-DailySignWeb
-DailySignApp
-GetSignInfoWeb
-ReceiveAward
+* GiftConfig
+* RoomGiftList
+* GetBagList
+* BagSend
+* GetDanmakuConfig
+* SendLiveMessage
+* ReceiveDailyBag
+* SilverToCoinWeb
+* SilverToCoinApp
+* GetTaskInfo
+* UserOnlineHeartbeatWeb
+* UserOnlineHeartbeatMobile
+* FreeSilverAward
+* DailySignWeb
+* DailySignApp
+* GetSignInfoWeb
+* ReceiveAward
 
 | File                  | Description                |
 |-----------------------|----------------------------|
@@ -34,13 +36,13 @@ ReceiveAward
 | user_online_heartbeat | 双端直播间观看时长任务心跳 |
 | silver_box            | 自动领宝箱                 |
 | silver_to_coin        | 银瓜子换硬币               |
+| Task                | 每日任务              |
+| GiftSend            | 自动清空过期礼物      |
 
 TODO
 
 | File                | Description          |
 |---------------------|-----------------------|
-| GiftSend            | 自动清空过期礼物      |
-| Task                | 每日任务              |
 | MaterialObject      | 实物抽奖              |
 | GroupSignIn         | 应援团签到            |
 | Storm               | 节奏风暴              |
